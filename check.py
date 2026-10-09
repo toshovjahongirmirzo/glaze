@@ -37,11 +37,11 @@ print("Bragg stack X0: ish %.3f gij %.3f cm -> separation %.1f%%"%(res['ish'],re
 sims={}
 for mom,tag in [(2.9,'2p9'),(3.2,'3p2')]:
     for m,k in [('ishkor','ish'),('gijduvan','gij')]:
-        a=np.loadtxt(f'build/angles_{m}_final_{tag}.csv',skiprows=1); th,e=fit_core_sigma(a)
+        a=np.loadtxt(f'results/angles_{m}_final_{tag}.csv',skiprows=1); th,e=fit_core_sigma(a)
         x0=invert_highland_for_X0(th,10.2,mom)/10; sims[(m,mom)]=a
         print(f"{m} {mom} GeV: sim X0 {x0:.3f} cm, vs Bragg {100*(x0/res[k]-1):+.1f}%")
 
-for f,comp,rho,lab in [('build/angles_al_5k_v2.csv',{'Al':1},2.699,'Al'),('build/angles_pmma_v2.csv',pmma,1.19,'PMMA')]:
+for f,comp,rho,lab in [('results/angles_al_5k_v2.csv',{'Al':1},2.699,'Al'),('results/angles_pmma_v2.csv',pmma,1.19,'PMMA')]:
     a=np.loadtxt(f,skiprows=1); th,e=fit_core_sigma(a); xs=invert_highland_for_X0(th,5.0,2.0)/10
     ex=X0cm(comp,rho); print(f"{lab} 5mm 2GeV: sim {xs:.3f} vs exact {ex:.3f} -> {100*(xs/ex-1):+.1f}%")
 
