@@ -1,0 +1,6 @@
+/tracking/verbose 1
+/tile/config 4
+/tile/clayThickness 5.0
+/tile/glazeThickness 1.0
+/gun/beamMomentum 2.0
+/run/beamOn 1

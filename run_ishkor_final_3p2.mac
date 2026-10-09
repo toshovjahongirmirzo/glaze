@@ -1,0 +1,5 @@
+/tile/config 3
+/tile/clayThickness 9.2 mm
+/tile/glazeThickness 1.0 mm
+/gun/beamMomentum 3.2
+/run/beamOn 15000

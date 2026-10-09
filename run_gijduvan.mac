@@ -1,0 +1,7 @@
+# Example: leaded Gijduvan glaze, 1 mm test-thickness, 2 GeV electrons, 1000 primaries
+# matching the "~1000 tracked particles per configuration" target in the proposal.
+/tile/config 4
+/tile/clayThickness 5.0
+/tile/glazeThickness 1.0
+/gun/beamMomentum 2.0
+/run/beamOn 1000

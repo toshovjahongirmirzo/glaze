@@ -1,0 +1,11 @@
+/vis/open OGL 600x600-0+0
+/vis/viewer/set/autoRefresh false
+/vis/verbose errors
+/vis/drawVolume
+/vis/viewer/set/viewpointThetaPhi 90 0
+/vis/scene/add/trajectories smooth
+/vis/modeling/trajectories/create/drawByCharge
+/vis/scene/endOfEventAction accumulate
+/tile/config 4
+/tile/glazeThickness 1.0
+/gun/momentum 2.0

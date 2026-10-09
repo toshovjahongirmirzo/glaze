@@ -1,0 +1,8 @@
+build/
+.DS_Store
+__pycache__/
+__MACOSX/
+*.backup
+*.pyc
+track_output.txt
+primary_*.txt

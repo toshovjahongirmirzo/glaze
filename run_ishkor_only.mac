@@ -1,0 +1,4 @@
+/tile/config 5
+/tile/glazeThickness 5.0
+/gun/beamMomentum 2.0
+/run/beamOn 5000
