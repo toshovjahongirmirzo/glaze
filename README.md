@@ -1,82 +1,83 @@
-# BL4S Tile-Stack Geant4 Starter (Experiment 1)
+# glaze
 
-A minimal, runnable Geant4 model of your electron-beam-through-tile-stack
-measurement, built to mirror the design in your proposal exactly:
+Geant4 simulation of electron multiple scattering in glazed ceramic tiles, with analysis scripts that extract the radiation length X₀ and compare it with the Bragg-additivity prediction.
 
-- Aluminium and PMMA reference slabs for method validation (`/tile/config 0` / `1`)
-- Unglazed clay body only (`/tile/config 2`)
-- Clay + lead-free Rishtan ishkor glaze (`/tile/config 3`)
-- Clay + leaded Gijduvan glaze (`/tile/config 4`)
-- Adjustable glaze thickness (`/tile/glazeThickness`) — set to 1 mm by default,
-  matching your redesigned "thicker test tile" that predicts a 20–23% split
-- Adjustable beam momentum (`/gun/momentum`) — for your two-momentum
-  1/p-scaling cross-check
+## Configurations
 
-## What it does NOT do yet (things you should add)
+Selected with `/tile/config N`:
 
-1. **Real compositions.** `DetectorConstruction.cc` has clearly marked
-   PLACEHOLDER oxide weight fractions for the clay body, ishkor glaze, and
-   Gijduvan glaze. Replace these with:
-   - Rishtan's directly-measured glaze composition
-   - The n=9 Bukhara/Gijduvan-analogue mean from Gradmann et al. 2015
-   - Prof. Rehren's SEM-EDS numbers once he runs them on your own tiles
-   This is the single highest-value fix — the physics conclusions are only
-   as good as these numbers.
+| N | Configuration |
+|---|---|
+| 0 | Aluminium reference |
+| 1 | PMMA reference |
+| 2 | Clay body only |
+| 3 | Clay + Rishtan ishkor glaze (lead-free) |
+| 4 | Clay + Gijduvan glaze (leaded) |
+| 5 | Ishkor glaze only |
+| 6 | Gijduvan glaze only |
+| 7 | No sample (air) |
+| 8 | Clay + Gijduvan, order reversed |
 
-2. **Upstream/downstream telescope planes.** Right now the code scores the
-   exit angle of the primary track the instant it leaves the last slab —
-   a reasonable proxy, but ELSA's real telescope has finite planes with
-   their own resolution (you quote ~27 microradians). You can add two thin
-   "virtual" tracking-plane volumes upstream and downstream of the tile
-   stack and score position there instead, to convolve in realistic
-   telescope resolution and reproduce your actual track-fitting method
-   more faithfully.
+Macro commands:
 
-3. **Background/no-sample subtraction run.** Add `/tile/config` for an
-   empty stack (air only) as your background configuration, exactly as
-   your proposal specifies.
+```
+/tile/config 3
+/tile/clayThickness 9.2 mm
+/tile/glazeThickness 1.0 mm
+/gun/beamMomentum 2.9        # GeV/c
+/run/beamOn 15000
+```
 
-4. **Two-beam-momentum 1/p check.** Loop `run_gijduvan.mac`-style macros at
-   two momenta and check that fitted theta0 scales as Highland predicts.
+Defaults: 5.0 mm clay, 1.0 mm glaze.
 
-## Build
+## Materials
+
+Defined in `src/DetectorConstruction.cc`.
+
+- Ishkor glaze: ρ = 2.6 g/cm³, from SEM-EDS oxide composition.
+- Gijduvan glaze: ρ = 3.75 g/cm³, mean of 9 leaded Bukhara glaze samples (Gradmann et al. 2015), PbO = 50.55 ± 6.9 wt%.
+- Clay body: ρ = 2.2 g/cm³, generic assumed composition (not measured).
+
+## Build and run
+
+Requires Geant4 and CMake.
 
 ```bash
 mkdir build && cd build
 cmake ..
 make -j4
+./tileScatter ../run_ishkor_final_2p9.mac
+mv angles.csv angles_ishkor_final_2p9.csv
 ```
 
-## Run
+Each run overwrites `angles.csv`, so rename it after every run. Final macros: `run_{ishkor,gijduvan}_final_{2p9,3p2}.mac`.
+
+## Analysis
+
+Needs Python 3, `numpy`, `scipy`.
 
 ```bash
-./tileScatter run_gijduvan.mac   # writes angles.csv
-mv angles.csv angles_gijduvan.csv
-./tileScatter run_ishkor.mac
-mv angles.csv angles_ishkor.csv
+python3 analyze.py results/angles_ishkor_final_2p9.csv 10.2 2.9
+# arguments: CSV, total stack thickness in mm, beam momentum in GeV
 ```
 
-## Analyze
+`analyze.py` fits the core of the exit-angle distribution with a Gaussian and inverts the Highland formula for X₀. `check.py` reproduces the table below from `results/`, including the analytic Bragg prediction and a bootstrap of the statistical significance.
 
-```bash
-pip install numpy scipy --break-system-packages
-python3 analyze.py angles_gijduvan.csv 1.0 2.0
-python3 analyze.py angles_ishkor.csv 1.0 2.0
-```
+## Results
 
-This applies your own pre-registered decision rule: compare the two
-measured X0 values, and check whether the separation exceeds 2 standard
-deviations (using the statistical uncertainty from your ~1000-event
-sample, propagated through the Gaussian fit) and whether each measured
-X0 is within 5%/15% of your Bragg-additivity prediction.
+9.2 mm clay + 1.0 mm glaze (10.2 mm total), 15,000 events per run.
 
-## A note on realism
+| | 2.9 GeV | 3.2 GeV |
+|---|---|---|
+| Ishkor stack X₀ | 9.891 ± 0.212 cm | 9.803 ± 0.207 cm |
+| Gijduvan stack X₀ | 7.772 ± 0.146 cm | 7.495 ± 0.160 cm |
+| Separation | 21.4% (8.2σ) | 23.5% (8.8σ) |
+| Bragg prediction (Ishkor / Gijduvan) | 10.69 / 8.43 cm | same |
 
-This is a genuine, physically correct Geant4 model of your measurement —
-FTFP_BERT is the real reference physics list, Highland's formula is
-inverted exactly as in your proposal, and the geometry matches your
-described stack. It is *not* a substitute for validating it yourself: run
-the Al and PMMA reference slabs first and check the measured X0 against
-the well-known literature values (X0(Al) ≈ 8.9 cm, X0(PMMA) ≈ 34.4 cm)
-before trusting any ceramic result, exactly as your proposal's validation
-step requires.
+Validation against exact X₀: Al 5 mm −5.1%, PMMA 5 mm −1.0%, Al 10.2 mm −9.2%. The Highland extraction reads low and the bias grows with x/X₀, so ceramic stacks should be compared with an aluminium reference at matched thickness.
+
+## Limitations
+
+- Ideal beam: no detector resolution, divergence or background.
+- Clay composition and glaze densities are assumptions.
+- Gijduvan composition is Bukhara-regional, not workshop-specific.
